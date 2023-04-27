@@ -9,8 +9,11 @@ init:
 install:
 	poetry install
 
-run:
-	@$(run) python -m $(package)
+run-server:
+	@$(run) python -m $(package).exec.server
+
+run-client:
+	@$(run) python -m $(package).exec.client
 
 fmt:
 	$(run) black .
