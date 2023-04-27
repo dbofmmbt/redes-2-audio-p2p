@@ -1,6 +1,11 @@
 run:=poetry run
 package:=redes_2_audio_p2p
 
+init:
+	pyenv install $(cat .python-version)
+	poetry env use python
+	$(MAKE) install
+
 install:
 	poetry install
 
