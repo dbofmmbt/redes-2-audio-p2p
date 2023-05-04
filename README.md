@@ -14,8 +14,6 @@ Dando tudo certo, `make run-server` ou `make run-client` deve conseguir rodar o 
 
 ## TODO
 
-- Definir ações entre cliente e servidor
-- Definir protocolo para as mensagens trocadas
 - Implementar classes para cada mensagem (com pydantic?)
 - Implementar as ações para cada mensagem
 - Implementar client
@@ -23,8 +21,49 @@ Dando tudo certo, `make run-server` ou `make run-client` deve conseguir rodar o 
 
 ## Ações
 
-TODO listar ações
+Cada ação pode ser um json com um campo `action` que define qual a ação a ser executada. Esse campo também definiria qual deve ser o resto do payload.
 
-## Protocolo
+### Cadastro de cliente
 
-TODO definir tipos de mensagens
+- Recusar cadastro caso cliente já esteja cadastrado.
+
+Requisição:
+
+```json
+{
+  "action": "register",
+  "songs": [
+    "song1"
+    // ...
+  ]
+}
+```
+
+Resposta:
+
+```json
+{
+  "message": "..."
+}
+```
+
+### Descadastro de cliente
+
+- Descadastrar o cliente que mandou a mensagem
+- Ou em caso de conexão fechada
+
+Requisição:
+
+```json
+{
+  "action": "unregister"
+}
+```
+
+Resposta:
+
+```json
+{
+  "message": "..."
+}
+```
