@@ -1,4 +1,5 @@
 from contextlib import suppress
+import json
 import os
 import signal
 import socket
@@ -9,10 +10,28 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server")
 
 
-def handle(conn, addr):
+def send(conn: socket.socket, payload: dict):
+    conn.sendall(json.dumps(payload).encode())
+
+
+def handle(conn: socket.socket, addr):
     with conn:
-        logger.info("sending OK")
-        conn.sendall(b"OK")
+        request_bytes = conn.recv(4096)
+        if not request_bytes:
+            return
+        request = json.loads(request_bytes)
+        match request.get("action"):
+            case "register":
+                logger.info(f"registering user {addr}")
+                send(conn, {"message": "TODO"})
+            case "unregister":
+                logger.info(f"unregistering user {addr}")
+                send(conn, {"message": "TODO"})
+            case "health":
+                logger.info("sending OK")
+                send(conn, {"message": "OK"})
+            case invalid:
+                logger.error(f"invalid action {invalid}")
 
 
 stop_server = False
