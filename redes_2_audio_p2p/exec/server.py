@@ -9,7 +9,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server")
 
-info_table = {}
+songs_dic = {}
+connections = []
 
 def send(conn: socket.socket, payload: dict):
     conn.sendall(json.dumps(payload).encode())
@@ -57,6 +58,8 @@ def server():
     while not stop_server:
         with suppress(TimeoutError):
             conn, addr = s.accept()
+            connections.append((conn, addr))
+            send_client_info()
             logger.info("received connection")
             threading.Thread(target=handle, args=(conn, addr)).run()
 
@@ -69,15 +72,16 @@ def stop(sig, frame):
     stop_server = True
 
 def register_songs(conn, request):
-    info_table[conn] = request.get("songs")
+    songs_dic[conn] = request.get("songs")
 
 def unregister_songs(conn):
     try:
-        info_table.pop(conn)
+        songs_dic.pop(conn)
     except:
         logger.error("Connection not in dictionary... Trying to unregister client that was never registered")
 
-
+def send_client_info():
+    send({"info": connections.count - 1})
 
 signal.signal(signal.SIGINT, stop)
 
