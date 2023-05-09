@@ -9,6 +9,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server")
 
+info_table = {}
 
 def send(conn: socket.socket, payload: dict):
     conn.sendall(json.dumps(payload).encode())
@@ -23,10 +24,12 @@ def handle(conn: socket.socket, addr):
         match request.get("action"):
             case "register":
                 logger.info(f"registering user {addr}")
-                send(conn, {"message": "TODO"})
+                register_songs(conn, request)
+                send(conn, {"message": "OK"})
             case "unregister":
                 logger.info(f"unregistering user {addr}")
-                send(conn, {"message": "TODO"})
+                unregister_songs(conn, request)
+                send(conn, {"message": "OK"})
             case "health":
                 logger.info("sending OK")
                 send(conn, {"message": "OK"})
@@ -64,6 +67,16 @@ def server():
 def stop(sig, frame):
     global stop_server
     stop_server = True
+
+def register_songs(conn, request):
+    info_table[conn] = request.get("songs")
+
+def unregister_songs(conn):
+    try:
+        info_table.pop(conn)
+    except:
+        logger.error("Connection not in dictionary... Trying to unregister client that was never registered")
+
 
 
 signal.signal(signal.SIGINT, stop)
