@@ -31,7 +31,7 @@ def handle(conn: socket.socket, addr):
                     send(conn, {"message": "OK"})
                 case "unregister":
                     logger.info(f"unregistering user {addr}")
-                    unregister_songs(conn, request)
+                    unregister_songs(conn)
                     stop_connection = True
                     send(conn, {"message": "OK"})
                 case "list":
@@ -65,7 +65,6 @@ def server():
         with suppress(TimeoutError):
             conn, addr = s.accept()
             connections.append((conn, addr))
-            send_client_info(conn)
             logger.info("received connection")
             threading.Thread(target=handle, args=(conn, addr)).run()
 
@@ -85,9 +84,6 @@ def unregister_songs(conn):
         songs_dic.pop(conn)
     except:
         logger.error("Connection not in dictionary... Trying to unregister client that was never registered")
-
-def send_client_info(conn):
-    send(conn, {"info": len(connections) - 1})
 
 def list_songs(conn):
     aux_dic = {}
