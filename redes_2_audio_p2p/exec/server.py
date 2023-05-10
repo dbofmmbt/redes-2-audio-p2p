@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server")
 
 songs_dic = {}
-connections = []
+
 
 def send(conn: socket.socket, payload: dict):
     conn.sendall(json.dumps(payload).encode())
@@ -19,29 +19,38 @@ def send(conn: socket.socket, payload: dict):
 def handle(conn: socket.socket, addr):
     stop_connection = False
     with conn:
-        while not stop_connection:
-            request_bytes = conn.recv(4096)
-            if not request_bytes:
-                return
-            request = json.loads(request_bytes)
-            match request.get("action"):
-                case "register":
-                    logger.info(f"registering user {addr}")
-                    register_songs(conn, request)
-                    send(conn, {"message": "OK"})
-                case "unregister":
-                    logger.info(f"unregistering user {addr}")
-                    unregister_songs(conn)
-                    stop_connection = True
-                    send(conn, {"message": "OK"})
-                case "list":
-                    logger.info(f"Listing songs to user {addr}")
-                    list_songs(conn)
-                case "health":
-                    logger.info("sending OK")
-                    send(conn, {"message": "OK"})
-                case invalid:
-                    logger.error(f"invalid action {invalid}")
+        try:
+            while not stop_connection:
+                request_bytes = conn.recv(4096)
+                if not request_bytes:
+                    return
+                request = json.loads(request_bytes)
+                match request.get("action"):
+                    case "register":
+                        logger.info(f"registering user {addr}")
+                        if addr not in songs_dic:
+                            register_songs(addr, request)
+                            send(
+                                conn, {"message": "user registered succesfully"})
+                        else:
+                            send(conn, {"message": "user already exists"})
+                    case "unregister":
+                        logger.info(f"unregistering user {addr}")
+                        unregister_songs(addr)
+                        stop_connection = True
+                        send(conn, {"message": "OK"})
+                    case "list":
+                        logger.info(f"Listing songs to user {addr}")
+                        list_songs(conn)
+                    case "health":
+                        logger.info("sending OK")
+                        send(conn, {"message": "OK"})
+                    case invalid:
+                        logger.error(f"invalid action {invalid}")
+        finally:
+            logger.info(f"disconnecting {addr}")
+            if addr in songs_dic:
+                unregister_songs(addr)
 
 
 stop_server = False
@@ -64,9 +73,8 @@ def server():
     while not stop_server:
         with suppress(TimeoutError):
             conn, addr = s.accept()
-            connections.append((conn, addr))
             logger.info("received connection")
-            threading.Thread(target=handle, args=(conn, addr)).run()
+            threading.Thread(target=handle, args=(conn, addr)).start()
 
     logger.info("stopping server")
     s.close()
@@ -76,23 +84,28 @@ def stop(sig, frame):
     global stop_server
     stop_server = True
 
-def register_songs(conn, request):
-    songs_dic[conn] = request.get("songs")
 
-def unregister_songs(conn):
+def register_songs(addr, request):
+    songs_dic[addr] = request.get("songs")
+
+
+def unregister_songs(addr):
     try:
-        songs_dic.pop(conn)
+        songs_dic.pop(addr)
     except:
-        logger.error("Connection not in dictionary... Trying to unregister client that was never registered")
+        logger.error(
+            "Connection not in dictionary... Trying to unregister client that was never registered")
+
 
 def list_songs(conn):
     aux_dic = {}
 
     for key, value in songs_dic.items():
-        ip, port= key.getpeername()
+        ip, _ = key
         aux_dic[ip] = value
 
     send(conn, {"peers": aux_dic})
+
 
 signal.signal(signal.SIGINT, stop)
 
