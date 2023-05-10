@@ -25,13 +25,13 @@ def test_hello_world():
     check(payload={"action": "health"}, expected={"message": "OK"})
 
 
-@pytest.mark.xfail
 def test_register():
     check(
         payload={"action": "register", "songs": ["song1"]}, expected={"message": "OK"}
     )
 
 
-@pytest.mark.xfail
 def test_unregister():
     check(payload={"action": "unregister"}, expected={"message": "OK"})
+
+

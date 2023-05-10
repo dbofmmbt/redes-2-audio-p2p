@@ -67,3 +67,23 @@ Resposta:
   "message": "..."
 }
 ```
+
+### Listagem de clientes
+- Retornar todos os clientes cadastrados com suas respectivas músicas
+
+```json
+{
+   "action": "list"
+}
+```
+
+Resposta:
+
+```json
+{
+  "peers": {
+    "127.0.0.1": ["song1.mp4", "song2.mp4"],
+    "128.0.0.1": ["song4.mp4", "song5.mp4"]
+  }
+}
+```
