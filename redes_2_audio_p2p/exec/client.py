@@ -6,7 +6,8 @@ import socket
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("client")
 
-logger.info("TODO client")
+server_ip = "localhost"
+server_port = 8080
 
 my_id = -1
 my_songs = []
@@ -14,7 +15,8 @@ my_songs = []
 @contextlib.contextmanager
 def client_conn():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect(("localhost", 8080))
+        s.connect((server_ip, server_port))
+        logger.info(f"Connected with {server_ip} in port {server_port}")
         yield s
 
 
@@ -31,8 +33,20 @@ def start_client():
         read_confirmation_message(s)
 
         while not stop_connection:
-            x = 1   # O que a gnt faz aqui? n tem que terminar conexão mas tbm não mais o que receber
+            
+            print("What is the next action?")
+            print("1 - Unregister")
+            print("2 - list clients songs")
+            next_action = int(input("Type the corresponding number: "))
 
+            match next_action:
+                case 1:
+                    send_unregister_message(s)
+                    read_confirmation_message(s)
+
+                case 2:
+                    send_list_message(s)
+                    read_list_message(s)
 
 def send_message(s: socket, payload: dict):
     serialized = json.dumps(payload)
@@ -46,6 +60,17 @@ def fill_dummy_songs():
 def send_register_message(s):
     message = {"action": "register", "songs": my_songs}
     send_message(s, message)
+    logger.info("Register message sent")
+
+def send_unregister_message(s):
+    message = {"action": "unregister"}
+    send_message(s, message)
+    logger.info("Unregister message sent")
+
+def send_list_message(s):
+    message = {"action": "list"}
+    send_message(s, message)
+    logger.info("List message sent")
 
 def read_confirmation_message(s):
     request_bytes = s.recv(4096)
@@ -69,9 +94,20 @@ def read_info_message(s):
     request = json.loads(request_bytes)
 
     if("info" in request):
+        logger.info("Received info message")
         my_id = int(request.get("info"))
         fill_dummy_songs()
         send_register_message(s)
+
+def read_list_message(s):
+    request_bytes = s.recv(4096)
+    if not request_bytes:
+        return
     
+    request = json.loads(request_bytes)
+    logger.info("Received clients songs list message")
+    print(request.get("peers"))
+    
+
 
 start_client()

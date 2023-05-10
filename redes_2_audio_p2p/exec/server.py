@@ -17,25 +17,31 @@ def send(conn: socket.socket, payload: dict):
 
 
 def handle(conn: socket.socket, addr):
+    stop_connection = False
     with conn:
-        request_bytes = conn.recv(4096)
-        if not request_bytes:
-            return
-        request = json.loads(request_bytes)
-        match request.get("action"):
-            case "register":
-                logger.info(f"registering user {addr}")
-                register_songs(conn, request)
-                send(conn, {"message": "OK"})
-            case "unregister":
-                logger.info(f"unregistering user {addr}")
-                unregister_songs(conn, request)
-                send(conn, {"message": "OK"})
-            case "health":
-                logger.info("sending OK")
-                send(conn, {"message": "OK"})
-            case invalid:
-                logger.error(f"invalid action {invalid}")
+        while not stop_connection:
+            request_bytes = conn.recv(4096)
+            if not request_bytes:
+                return
+            request = json.loads(request_bytes)
+            match request.get("action"):
+                case "register":
+                    logger.info(f"registering user {addr}")
+                    register_songs(conn, request)
+                    send(conn, {"message": "OK"})
+                case "unregister":
+                    logger.info(f"unregistering user {addr}")
+                    unregister_songs(conn, request)
+                    stop_connection = True
+                    send(conn, {"message": "OK"})
+                case "list":
+                    logger.info(f"Listing songs to user {addr}")
+                    list_songs(conn)
+                case "health":
+                    logger.info("sending OK")
+                    send(conn, {"message": "OK"})
+                case invalid:
+                    logger.error(f"invalid action {invalid}")
 
 
 stop_server = False
@@ -59,7 +65,7 @@ def server():
         with suppress(TimeoutError):
             conn, addr = s.accept()
             connections.append((conn, addr))
-            send_client_info()
+            send_client_info(conn)
             logger.info("received connection")
             threading.Thread(target=handle, args=(conn, addr)).run()
 
@@ -80,8 +86,17 @@ def unregister_songs(conn):
     except:
         logger.error("Connection not in dictionary... Trying to unregister client that was never registered")
 
-def send_client_info():
-    send({"info": connections.count - 1})
+def send_client_info(conn):
+    send(conn, {"info": len(connections) - 1})
+
+def list_songs(conn):
+    aux_dic = {}
+
+    for key, value in songs_dic.items():
+        ip, port= key.getpeername()
+        aux_dic[ip] = value
+
+    send(conn, {"peers": aux_dic})
 
 signal.signal(signal.SIGINT, stop)
 
