@@ -11,6 +11,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# this improves test message a lot
+pytest.register_assert_rewrite("tests.util")
+
 
 @pytest.fixture(autouse=True, scope="session")
 def run_server():
