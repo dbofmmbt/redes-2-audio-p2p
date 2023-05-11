@@ -32,6 +32,7 @@ Requisição:
 ```json
 {
   "action": "register",
+  "port": 12345,
   "songs": [
     "song1"
     // ...
@@ -43,7 +44,15 @@ Resposta:
 
 ```json
 {
-  "message": "..."
+  "message": "user registered succesfully"
+}
+```
+
+Em caso de usuário já existente:
+
+```json
+{
+  "message": "user already exists"
 }
 ```
 
@@ -64,16 +73,17 @@ Resposta:
 
 ```json
 {
-  "message": "..."
+  "message": "OK"
 }
 ```
 
 ### Listagem de clientes
+
 - Retornar todos os clientes cadastrados com suas respectivas músicas
 
 ```json
 {
-   "action": "list"
+  "action": "list"
 }
 ```
 
@@ -81,9 +91,9 @@ Resposta:
 
 ```json
 {
-  "peers": {
-    "127.0.0.1": ["song1.mp4", "song2.mp4"],
-    "128.0.0.1": ["song4.mp4", "song5.mp4"]
-  }
+  "peers": [
+    {"ip": "127.0.0.1", "port": 12345, "songs": ["song1.mp4", "song2.mp4"]}
+    {"ip": "128.0.0.1", "port": 12346, "songs": ["song4.mp4", "song5.mp4"]}
+  ]
 }
 ```

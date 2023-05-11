@@ -9,7 +9,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server")
 
-songs_dic = {}
+peers = {}
 
 
 def send(conn: socket.socket, payload: dict):
@@ -28,10 +28,9 @@ def handle(conn: socket.socket, addr):
                 match request.get("action"):
                     case "register":
                         logger.info(f"registering user {addr}")
-                        if addr not in songs_dic:
+                        if addr not in peers:
                             register_songs(addr, request)
-                            send(
-                                conn, {"message": "user registered succesfully"})
+                            send(conn, {"message": "user registered succesfully"})
                         else:
                             send(conn, {"message": "user already exists"})
                     case "unregister":
@@ -49,7 +48,7 @@ def handle(conn: socket.socket, addr):
                         logger.error(f"invalid action {invalid}")
         finally:
             logger.info(f"disconnecting {addr}")
-            if addr in songs_dic:
+            if addr in peers:
                 unregister_songs(addr)
 
 
@@ -86,25 +85,20 @@ def stop(sig, frame):
 
 
 def register_songs(addr, request):
-    songs_dic[addr] = request.get("songs")
+    peers[addr] = {"ip": addr[0], "port": request["port"], "songs": request["songs"]}
 
 
 def unregister_songs(addr):
     try:
-        songs_dic.pop(addr)
+        peers.pop(addr)
     except:
         logger.error(
-            "Connection not in dictionary... Trying to unregister client that was never registered")
+            "Connection not in dictionary... Trying to unregister client that was never registered"
+        )
 
 
 def list_songs(conn):
-    aux_dic = {}
-
-    for key, value in songs_dic.items():
-        ip, _ = key
-        aux_dic[ip] = value
-
-    send(conn, {"peers": aux_dic})
+    send(conn, {"peers": list(peers.values())})
 
 
 signal.signal(signal.SIGINT, stop)
