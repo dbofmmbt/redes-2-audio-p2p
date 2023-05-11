@@ -5,51 +5,35 @@ import signal
 import socket
 import threading
 import logging
+from redes_2_audio_p2p import handler
+
+from ..handler import health_handler, list_handler, register_handler, unregister_handler
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server")
 
-peers = {}
-
-
-def send(conn: socket.socket, payload: dict):
-    conn.sendall(json.dumps(payload).encode())
-
 
 def handle(conn: socket.socket, addr):
-    stop_connection = False
     with conn:
         try:
-            while not stop_connection:
-                request_bytes = conn.recv(4096)
-                if not request_bytes:
-                    return
+            while request_bytes := conn.recv(4096):
                 request = json.loads(request_bytes)
+
                 match request.get("action"):
                     case "register":
-                        logger.info(f"registering user {addr}")
-                        if addr not in peers:
-                            register_songs(addr, request)
-                            send(conn, {"message": "user registered succesfully"})
-                        else:
-                            send(conn, {"message": "user already exists"})
+                        register_handler(conn, addr, request)
                     case "unregister":
-                        logger.info(f"unregistering user {addr}")
-                        unregister_songs(addr)
-                        stop_connection = True
-                        send(conn, {"message": "OK"})
+                        unregister_handler(conn, addr, request)
                     case "list":
-                        logger.info(f"Listing songs to user {addr}")
-                        list_songs(conn)
+                        list_handler(conn, addr, request)
                     case "health":
-                        logger.info("sending OK")
-                        send(conn, {"message": "OK"})
+                        health_handler(conn, addr, request)
                     case invalid:
                         logger.error(f"invalid action {invalid}")
         finally:
             logger.info(f"disconnecting {addr}")
-            if addr in peers:
-                unregister_songs(addr)
+            if addr in handler.peers:
+                handler.unregister_songs(addr)
 
 
 stop_server = False
@@ -82,23 +66,6 @@ def server():
 def stop(sig, frame):
     global stop_server
     stop_server = True
-
-
-def register_songs(addr, request):
-    peers[addr] = {"ip": addr[0], "port": request["port"], "songs": request["songs"]}
-
-
-def unregister_songs(addr):
-    try:
-        peers.pop(addr)
-    except:
-        logger.error(
-            "Connection not in dictionary... Trying to unregister client that was never registered"
-        )
-
-
-def list_songs(conn):
-    send(conn, {"peers": list(peers.values())})
 
 
 signal.signal(signal.SIGINT, stop)
