@@ -9,8 +9,6 @@ logger = logging.getLogger("client")
 server_ip = "localhost"
 server_port = 8080
 
-my_songs = []
-
 
 @contextlib.contextmanager
 def client_conn():
@@ -27,16 +25,28 @@ def start_client():
     with client_conn() as s:
         while not stop_connection:
             print("What is the next action?")
-            print("1 - Unregister")
-            print("2 - list clients songs")
+            print("1 - register")
+            print("2 - Unregister")
+            print("3 - list clients songs")
+            print("0 - quit")
             next_action = int(input("Type the corresponding number: "))
 
             match next_action:
+                case 0:
+                    return
                 case 1:
+                    port = int(input("Type the client port: "))
+                    songs = input("Type the list of songs (comma separated): ").split(
+                        ","
+                    )
+                    send_register_message(s, port, songs)
+                    request_bytes = s.recv(4096)
+                    _ = json.loads(request_bytes)
+                case 2:
                     send_unregister_message(s)
                     read_confirmation_message(s)
 
-                case 2:
+                case 3:
                     send_list_message(s)
                     read_list_message(s)
 
@@ -46,13 +56,8 @@ def send_message(s: socket, payload: dict):
     s.sendall(serialized.encode())
 
 
-def fill_dummy_songs():
-    for i in range(3):
-        my_songs.append(f"song{i}")
-
-
-def send_register_message(s):
-    message = {"action": "register", "songs": my_songs}
+def send_register_message(s, port, songs):
+    message = {"action": "register", "port": port, "songs": songs}
     send_message(s, message)
     logger.info("Register message sent")
 
@@ -91,7 +96,7 @@ def read_list_message(s):
 
     request = json.loads(request_bytes)
     logger.info("Received clients songs list message")
-    print(request.get("peers"))
+    print(request)
 
 
 start_client()

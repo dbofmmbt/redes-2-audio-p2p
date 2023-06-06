@@ -41,7 +41,7 @@ def unregister_songs(addr):
 
 
 def list_handler(conn, addr, request):
-    logger.info(f"Listing songs to user {addr}")
+    logger.info(f"Listing songs to user {addr} {list(peers.values())}")
     send(conn, {"peers": list(peers.values())})
 
 
