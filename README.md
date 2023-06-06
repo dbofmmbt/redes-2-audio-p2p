@@ -12,13 +12,6 @@ Dando tudo certo, `make run-server` ou `make run-client` deve conseguir rodar o 
 
 `make inspect` vai rodar formatador, linter (e testes quando houver).
 
-## TODO
-
-- Implementar classes para cada mensagem (com pydantic?)
-- Implementar as ações para cada mensagem
-- Implementar client
-- Implementar server
-
 ## Ações
 
 Cada ação pode ser um json com um campo `action` que define qual a ação a ser executada. Esse campo também definiria qual deve ser o resto do payload.
