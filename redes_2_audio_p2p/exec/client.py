@@ -41,7 +41,8 @@ def start_client():
                     )
                     send_register_message(s, port, songs)
                     request_bytes = s.recv(4096)
-                    _ = json.loads(request_bytes)
+                    with separator():
+                        print(json.loads(request_bytes))
                 case 2:
                     send_unregister_message(s)
                     read_confirmation_message(s)
@@ -96,7 +97,16 @@ def read_list_message(s):
 
     request = json.loads(request_bytes)
     logger.info("Received clients songs list message")
-    print(request)
+
+    with separator():
+        print(request)
+
+
+@contextlib.contextmanager
+def separator():
+    print("*****************************")
+    yield
+    print("*****************************")
 
 
 start_client()
