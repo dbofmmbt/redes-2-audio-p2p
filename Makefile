@@ -15,6 +15,12 @@ run-server:
 run-client:
 	@$(run) python -m $(package).exec.client
 
+wave-receiver:
+	@$(run) python -m $(package).exec.wave-receiver
+
+wave-sender:
+	@$(run) python -m $(package).exec.wave-sender songs/test.wav
+
 fmt:
 	$(run) black .
 
