@@ -1,3 +1,4 @@
+import glob
 import logging
 import contextlib
 import json
@@ -8,6 +9,10 @@ logger = logging.getLogger("client")
 
 server_ip = "localhost"
 server_port = 8080
+
+songs_files_dir = "songs/"
+all_songs_paths = []
+
 
 
 @contextlib.contextmanager
@@ -22,6 +27,8 @@ stop_connection = False
 
 
 def start_client():
+
+
     with client_conn() as s:
         while not stop_connection:
             print("What is the next action?")
@@ -35,14 +42,8 @@ def start_client():
                 case 0:
                     return
                 case 1:
-                    port = int(input("Type the client port: "))
-                    songs = input("Type the list of songs (comma separated): ").split(
-                        ","
-                    )
-                    send_register_message(s, port, songs)
-                    request_bytes = s.recv(4096)
-                    with separator():
-                        print(json.loads(request_bytes))
+                    register_behaviour(s)
+
                 case 2:
                     send_unregister_message(s)
                     read_confirmation_message(s)
@@ -108,5 +109,32 @@ def separator():
     yield
     print("*****************************")
 
+
+def get_songs_paths():
+    print(f"Looking for files in {songs_files_dir}")
+    path = "songs/" + songs_files_dir + "*.wav"
+    return  glob.glob(path)
+
+def get_songs_names():
+    songs_names = []
+    for song_path in all_songs_paths:
+        songs_names.append(song_path.split('/')[-1])
+
+    return songs_names
+
+def register_behaviour(s):
+    port = int(input("Type the client port: "))
+
+    global songs_files_dir, all_songs_paths
+    songs_files_dir = input("Type client's folder name: (\"example/\"): ")
+    all_songs_paths = get_songs_paths()
+    print(f"all_songs_paths: {all_songs_paths}")
+
+    send_register_message(s, port, get_songs_names())
+    request_bytes = s.recv(4096)
+    with separator():
+        print(json.loads(request_bytes))
+
+all_songs_paths = get_songs_paths()
 
 start_client()
