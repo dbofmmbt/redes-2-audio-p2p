@@ -7,7 +7,7 @@ import threading
 import logging
 from redes_2_audio_p2p import handler
 
-from ..handler import health_handler, list_handler, register_handler, unregister_handler
+from ..handler import health_handler, list_handler, register_handler, unregister_handler, notify_request_handler
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server")
@@ -28,6 +28,8 @@ def handle(conn: socket.socket, addr):
                         list_handler(conn, addr, request)
                     case "health":
                         health_handler(conn, addr, request)
+                    case "notify-request":
+                        notify_request_handler(conn, addr, request)
                     case invalid:
                         logger.error(f"invalid action {invalid}")
         finally:

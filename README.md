@@ -90,3 +90,28 @@ Resposta:
   ]
 }
 ```
+### Outro cliente quer música
+
+- Avisar um cliente que outro quer uma música
+
+```json
+{
+  "action": "notify-request",
+  "client": {"ip": "127.0.0.1", "port": 12345},
+  "song": "song.wav"
+}
+```
+
+Resposta:
+
+```json
+{
+  "message": "OK"
+}
+```
+```json
+{
+  "message": "Not OK"
+}
+```
+
