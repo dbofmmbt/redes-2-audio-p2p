@@ -90,9 +90,9 @@ Resposta:
   ]
 }
 ```
-### Outro cliente quer música
+### Cliente quer música - servidor ou servidor
 
-- Avisar um cliente que outro quer uma música
+- Avisar para o servidor/cliente que um cliente quer uma música de outro/sua
 
 ```json
 {
@@ -114,4 +114,5 @@ Resposta:
   "message": "Not OK"
 }
 ```
+
 

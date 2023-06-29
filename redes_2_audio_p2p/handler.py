@@ -2,6 +2,7 @@ import json
 import logging
 import socket
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,7 @@ test_list = []
 def send(conn: socket.socket, payload: dict):
     conn.sendall(json.dumps(payload).encode())
     test_list.append("a")
+
 
 def register_handler(conn, addr, request):
     logger.info(f"registering user {addr}")
@@ -63,6 +65,12 @@ def notify_request_handler(conn, addr, request):
         ip, port = target_client_addr
         if peers_values[i].get("ip") == ip and peers_values[i].get("port") == port :
             print("Found it!")
+
+            conn = list(peers.keys())[i]
+            print("conn")
+            print(conn)
+            send(conn, request)
+
             send(conn, {"message": "OK"})
         else:
             send(conn, {"message": "Not OK"})

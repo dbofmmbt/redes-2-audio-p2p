@@ -12,6 +12,7 @@ from ..handler import health_handler, list_handler, register_handler, unregister
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server")
 
+all_cons = []
 
 def handle(conn: socket.socket, addr):
     with conn:
@@ -29,7 +30,7 @@ def handle(conn: socket.socket, addr):
                     case "health":
                         health_handler(conn, addr, request)
                     case "notify-request":
-                        notify_request_handler(conn, addr, request)
+                        notify_request_logic(conn, addr, request)
                     case invalid:
                         logger.error(f"invalid action {invalid}")
         finally:
@@ -39,6 +40,17 @@ def handle(conn: socket.socket, addr):
 
 
 stop_server = False
+
+def notify_request_logic(conn, addr, request):
+    
+    target_client_addr = (request.get("client").get("ip"), request.get("client").get("port"))
+
+    for i in range(len(all_cons)):
+        if(all_cons[i].getpeername() == target_client_addr):
+                print("Igualllll")
+                target_conn = all_cons[i]
+        
+    notify_request_handler(conn, addr, request, target_conn)
 
 
 def server():
@@ -60,6 +72,7 @@ def server():
             conn, addr = s.accept()
             logger.info("received connection")
             threading.Thread(target=handle, args=(conn, addr)).start()
+
 
     logger.info("stopping server")
     s.close()
